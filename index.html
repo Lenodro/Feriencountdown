@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Countdown bis zu den Sommerferien</title>
+  <style>
+    :root {
+      --blau: #2a5dc4;
+      --hellblau: #e7f0fd;
+      --weiß: #ffffff;
+      --grau: #6b7280;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom right, #cfe8ff, #f0f8ff);
+      color: var(--blau);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    .card {
+      background: var(--weiß);
+      border-radius: 1rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      padding: 2rem;
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+      animation: fadeIn 1s ease;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      font-size: 1.2rem;
+      margin: 1rem 0;
+      color: var(--grau);
+    }
+
+    .zahl {
+      font-size: 2.5rem;
+      color: var(--blau);
+      margin-bottom: 0.2rem;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>📆 Sommerferien NRW 2025</h1>
+    <div>
+      <p class="zahl" id="gesamtTage">--</p>
+      <p>Noch Tage insgesamt bis zu den Ferien</p>
+    </div>
+    <div>
+      <p class="zahl" id="schulTage">--</p>
+      <p>echte Schultage (Mo–Fr, ohne Ferien)</p>
+    </div>
+  </div>
+
+  <script>
+    const ferienStart = new Date('2025-07-14');
+    const heute = new Date();
+    heute.setHours(0, 0, 0, 0);
+
+    // Ferien in NRW vor den Sommerferien
+    const ferienTage = [
+      ...datumBereich('2025-04-14', '2025-04-26'), // Osterferien
+      '2025-06-10', // Pfingstferien
+      '2025-06-19', // Fronleichnam
+      '2025-06-20'  // Brückentag
+    ].map(d => new Date(d));
+
+    function datumBereich(startStr, endStr) {
+      const start = new Date(startStr);
+      const end = new Date(endStr);
+      const daten = [];
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        daten.push(new Date(d));
+      }
+      return daten.map(d => d.toISOString().slice(0, 10));
+    }
+
+    // Gesamtanzahl Tage
+    const tageGesamt = Math.ceil((ferienStart - heute) / (1000 * 60 * 60 * 24));
+    document.getElementById('gesamtTage').textContent = tageGesamt;
+
+    // Schultage zählen
+    let schulTage = 0;
+    for (let d = new Date(heute); d < ferienStart; d.setDate(d.getDate() + 1)) {
+      const istWochenTag = d.getDay() >= 1 && d.getDay() <= 5;
+      const istFerien = ferienTage.some(ferienTag => ferienTag.getTime() === d.getTime());
+
+      if (istWochenTag && !istFerien) {
+        schulTage++;
+      }
+    }
+
+    document.getElementById('schulTage').textContent = schulTage;
+  </script>
+</body>
+</html>
