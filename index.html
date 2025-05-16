@@ -27,6 +27,7 @@
       align-items: center;
       min-height: 100vh;
       padding: 2rem;
+      overflow: hidden;
     }
 
     .card {
@@ -41,31 +42,51 @@
     }
 
     h1 {
-      font-size: 1.8rem;
-      margin-bottom: 1rem;
-    }
-
-    p {
-      font-size: 1.2rem;
-      margin: 1rem 0;
-      color: var(--grau);
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+      animation: slideDown 1s ease;
     }
 
     .zahl {
       font-size: 2.5rem;
       color: var(--blau);
       margin-bottom: 0.2rem;
+      font-weight: bold;
+    }
+
+    p {
+      font-size: 1.1rem;
+      margin: 0.5rem 0 1rem;
+      color: var(--grau);
+    }
+
+    .live-countdown {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-top: 1rem;
+      animation: fadeIn 2s ease;
+    }
+
+    .live-countdown div {
+      text-align: center;
+    }
+
+    .live-countdown span {
+      display: block;
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: var(--blau);
     }
 
     @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
@@ -80,19 +101,24 @@
       <p class="zahl" id="schulTage">--</p>
       <p>echte Schultage (Mo–Fr, ohne Ferien)</p>
     </div>
+    <div class="live-countdown">
+      <div><span id="stunden">--</span>Std</div>
+      <div><span id="minuten">--</span>Min</div>
+      <div><span id="sekunden">--</span>Sek</div>
+    </div>
   </div>
 
   <script>
-    const ferienStart = new Date('2025-07-14');
+    const ferienStart = new Date('2025-07-14T00:00:00');
     const heute = new Date();
     heute.setHours(0, 0, 0, 0);
 
     // Ferien in NRW vor den Sommerferien
     const ferienTage = [
       ...datumBereich('2025-04-14', '2025-04-26'), // Osterferien
-      '2025-06-10', // Pfingstferien
-      '2025-06-19', // Fronleichnam
-      '2025-06-20'  // Brückentag
+      '2025-06-10',
+      '2025-06-19',
+      '2025-06-20'
     ].map(d => new Date(d));
 
     function datumBereich(startStr, endStr) {
@@ -113,14 +139,34 @@
     let schulTage = 0;
     for (let d = new Date(heute); d < ferienStart; d.setDate(d.getDate() + 1)) {
       const istWochenTag = d.getDay() >= 1 && d.getDay() <= 5;
-      const istFerien = ferienTage.some(ferienTag => ferienTag.getTime() === d.getTime());
+      const istFerien = ferienTage.some(f => f.getTime() === d.getTime());
+      if (istWochenTag && !istFerien) schulTage++;
+    }
+    document.getElementById('schulTage').textContent = schulTage;
 
-      if (istWochenTag && !istFerien) {
-        schulTage++;
+    // Sekundengenauer Countdown
+    function updateLiveCountdown() {
+      const now = new Date().getTime();
+      const diff = ferienStart - now;
+
+      if (diff <= 0) {
+        document.getElementById('stunden').textContent = '00';
+        document.getElementById('minuten').textContent = '00';
+        document.getElementById('sekunden').textContent = '00';
+        return;
       }
+
+      const stunden = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minuten = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const sekunden = Math.floor((diff % (1000 * 60)) / 1000);
+
+      document.getElementById('stunden').textContent = String(stunden).padStart(2, '0');
+      document.getElementById('minuten').textContent = String(minuten).padStart(2, '0');
+      document.getElementById('sekunden').textContent = String(sekunden).padStart(2, '0');
     }
 
-    document.getElementById('schulTage').textContent = schulTage;
+    updateLiveCountdown();
+    setInterval(updateLiveCountdown, 1000);
   </script>
 </body>
 </html>
